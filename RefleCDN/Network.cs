@@ -7,7 +7,6 @@ namespace RefleCDN;
 
 static class Network {
 
-    public const int LOCAL_PORT = 80;
     public const String BASE_DIR = "/";
 
     private static WebserverLite server;
@@ -16,7 +15,9 @@ static class Network {
 
         Log.Network.LogDebug("Initializing network...");
 
-        server = new WebserverLite(new WebserverSettings("0.0.0.0", LOCAL_PORT), Routes.DefaultNotFoundRoute);
+        int port = Configuration.GetInt("Settings", "Port");
+
+        server = new WebserverLite(new WebserverSettings("0.0.0.0", port), Routes.DefaultNotFoundRoute);
         server.Events.Logger += Logger;
         server.Settings.Debug.Responses = true;
 

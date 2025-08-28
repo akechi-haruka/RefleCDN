@@ -37,9 +37,18 @@ static class Program {
             Directory.CreateDirectory(FILES_DIR);
             Log.Main.LogInformation("Created directory: {d}", FILES_DIR);
         }
-        
-        Network.Initialize();
-        
+
+        try {
+            Network.Initialize();
+        } catch (Exception ex) {
+            Log.Main.LogCritical("An error occurred while starting the webserver:\n{ex}", ex.Message);
+#if DEBUG
+            Log.Main.LogCritical(ex.ToString());
+#endif
+            Console.ReadLine();
+            return;
+        }
+
         Log.Main.LogInformation(NAME);
         Log.Main.LogInformation("Initialization complete.");
         Log.Main.LogInformation("Place files in: {d}", FILES_DIR);
