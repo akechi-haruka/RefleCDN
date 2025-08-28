@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <Company>Akechi Haruka</Company>
+        <AssemblyVersion>1.0</AssemblyVersion>
+        <FileVersion>1.0</FileVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+      <PackageReference Include="Watson.Lite" Version="6.3.12" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <Target Name="SetHash" AfterTargets="InitializeSourceControlInformation">
+
+        <Exec Command="git.exe describe --always --dirty --exclude='*' --abbrev=8" ConsoleToMSBuild="True" IgnoreExitCode="False">
+            <Output PropertyName="Revision" TaskParameter="ConsoleOutput" />
+        </Exec>
+
+        <ItemGroup>
+            <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+                <_Parameter1>GitHash</_Parameter1>
+                <_Parameter2>$(Revision)</_Parameter2>
+            </AssemblyAttribute>
+        </ItemGroup>
+
+    </Target>
+
+</Project>
