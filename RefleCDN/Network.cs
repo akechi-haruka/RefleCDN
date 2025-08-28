@@ -17,14 +17,19 @@ static class Network {
         Log.Network.LogDebug("Initializing network...");
 
         server = new WebserverLite(new WebserverSettings("0.0.0.0", LOCAL_PORT), Routes.DefaultNotFoundRoute);
+        server.Events.Logger += Logger;
+        server.Settings.Debug.Responses = true;
 
         server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, BASE_DIR, Routes.ShowServer, Routes.DefaultErrorRoute);
         server.Routes.PreAuthentication.Content.Add(BASE_DIR + Program.FILES_DIR + "/", true);
-        server.Routes.PostRouting = Routes.PostRouting;
 
         Log.Network.LogInformation("Starting webserver on {H}:{P}", server.Settings.Hostname, server.Settings.Port);
         server.Start();
         Log.Network.LogDebug("Started.");
+    }
+
+    private static void Logger(string obj) {
+        Log.Network.LogInformation(obj);
     }
 
     public static void Stop() {
@@ -49,10 +54,6 @@ static class Routes {
     internal static async Task ShowServer(HttpContextBase ctx) {
         ctx.Response.StatusCode = 200;
         await ctx.Response.Send("RefleCDN");
-    }
-
-    internal static async Task PostRouting(HttpContextBase ctx) {
-        Log.Network.LogDebug("{Method} {Url}: {ResponseCode} {ResponseLength} {UserAgent}", ctx.Request.Method, ctx.Request.Url.RawWithQuery, ctx.Response.StatusCode, ctx.Response.ContentLength, ctx.Request.Useragent);
     }
     
 }

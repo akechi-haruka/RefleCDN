@@ -42,7 +42,7 @@ static class Program {
         
         Log.Main.LogInformation(NAME);
         Log.Main.LogInformation("Initialization complete.");
-        Log.Main.LogInformation("Places files in: {d}", FILES_DIR);
+        Log.Main.LogInformation("Place files in: {d}", FILES_DIR);
         Log.Main.LogInformation("Press any key to exit.");
 
         Console.ReadKey();
