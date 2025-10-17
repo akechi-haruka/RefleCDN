@@ -6,13 +6,12 @@ using HttpMethod = WatsonWebserver.Core.HttpMethod;
 namespace RefleCDN;
 
 static class Network {
-
     public const String BASE_DIR = "/";
 
     private static WebserverLite server;
+    private static WebserverLite serverSsl;
 
     public static void Initialize() {
-
         Log.Network.LogDebug("Initializing network...");
 
         int port = Configuration.GetInt("Settings", "Port");
@@ -26,6 +25,28 @@ static class Network {
 
         Log.Network.LogInformation("Starting webserver on {H}:{P}", server.Settings.Hostname, server.Settings.Port);
         server.Start();
+
+        if (Configuration.GetBool("Settings", "SSLEnable")) {
+            int portSsl = Configuration.GetInt("Settings", "PortSSL");
+            serverSsl = new WebserverLite(new WebserverSettings("0.0.0.0", portSsl, true) {
+                Ssl = new WebserverSettings.SslSettings() {
+                    Enable = true,
+                    AcceptInvalidAcertificates = true,
+                    PfxCertificateFile = Configuration.Get("Settings", "SSLFileName"),
+                    PfxCertificatePassword = Configuration.Get("Settings", "SSLPassword")
+                }
+            }, Routes.DefaultNotFoundRoute);
+
+            serverSsl.Events.Logger += Logger;
+            serverSsl.Settings.Debug.Responses = true;
+
+            serverSsl.Routes.PreAuthentication.Static.Add(HttpMethod.GET, BASE_DIR, Routes.ShowServer, Routes.DefaultErrorRoute);
+            serverSsl.Routes.PreAuthentication.Content.Add(BASE_DIR + Program.FILES_DIR + "/", true);
+
+            Log.Network.LogInformation("Starting webserver on {H}:{P}", serverSsl.Settings.Hostname, serverSsl.Settings.Port);
+            serverSsl.Start();
+        }
+
         Log.Network.LogDebug("Started.");
     }
 
@@ -36,6 +57,7 @@ static class Network {
     public static void Stop() {
         Log.Network.LogDebug("Stopping webserver");
         server.Stop();
+        serverSsl?.Stop();
     }
 }
 
@@ -56,5 +78,4 @@ static class Routes {
         ctx.Response.StatusCode = 200;
         await ctx.Response.Send("RefleCDN");
     }
-    
 }

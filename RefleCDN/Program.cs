@@ -54,10 +54,14 @@ static class Program {
         Log.Main.LogInformation("Place files in: {d}", FILES_DIR);
         Log.Main.LogInformation("Press any key to exit.");
 
-        Console.ReadKey();
-        
-        Log.Main.LogInformation("Exiting");
-        
-        Network.Stop();
+        if (Configuration.GetBool("Settings", "PressKeyToExit")) {
+            Console.ReadKey();
+
+            Log.Main.LogInformation("Exiting");
+
+            Network.Stop();
+        } else {
+            Thread.Sleep(Int32.MaxValue);
+        }
     }
 }
