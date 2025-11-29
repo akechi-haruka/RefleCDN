@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 namespace RefleCDN;
 
 static class Program {
-    public const string FILES_DIR = "Files";
     
     public static readonly String NAME;
     
@@ -32,10 +31,12 @@ static class Program {
         
         Log.Initialize();
 
-        if (!Directory.Exists(FILES_DIR)) {
-            Log.Main.LogDebug("Directory not found: {d}", FILES_DIR);
-            Directory.CreateDirectory(FILES_DIR);
-            Log.Main.LogInformation("Created directory: {d}", FILES_DIR);
+        string fileDir = Configuration.Get("Settings", "FilesDirectory");
+
+        if (!Directory.Exists(fileDir)) {
+            Log.Main.LogDebug("Directory not found: {d}", fileDir);
+            Directory.CreateDirectory(fileDir);
+            Log.Main.LogInformation("Created directory: {d}", fileDir);
         }
 
         try {
@@ -51,7 +52,7 @@ static class Program {
 
         Log.Main.LogInformation(NAME);
         Log.Main.LogInformation("Initialization complete.");
-        Log.Main.LogInformation("Place files in: {d}", FILES_DIR);
+        Log.Main.LogInformation("Place files in: {d}", fileDir);
         Log.Main.LogInformation("Press any key to exit.");
 
         if (Configuration.GetBool("Settings", "PressKeyToExit")) {

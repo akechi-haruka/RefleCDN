@@ -15,13 +15,14 @@ static class Network {
         Log.Network.LogDebug("Initializing network...");
 
         int port = Configuration.GetInt("Settings", "Port");
+        string fileDir = Configuration.Get("Settings", "FilesDirectory");
 
         server = new WebserverLite(new WebserverSettings("0.0.0.0", port), Routes.DefaultNotFoundRoute);
         server.Events.Logger += Logger;
         server.Settings.Debug.Responses = true;
 
         server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, BASE_DIR, Routes.ShowServer, Routes.DefaultErrorRoute);
-        server.Routes.PreAuthentication.Content.Add(BASE_DIR + Program.FILES_DIR + "/", true);
+        server.Routes.PreAuthentication.Content.Add(BASE_DIR + fileDir + "/", true);
 
         Log.Network.LogInformation("Starting webserver on {H}:{P}", server.Settings.Hostname, server.Settings.Port);
         server.Start();
@@ -41,7 +42,7 @@ static class Network {
             serverSsl.Settings.Debug.Responses = true;
 
             serverSsl.Routes.PreAuthentication.Static.Add(HttpMethod.GET, BASE_DIR, Routes.ShowServer, Routes.DefaultErrorRoute);
-            serverSsl.Routes.PreAuthentication.Content.Add(BASE_DIR + Program.FILES_DIR + "/", true);
+            serverSsl.Routes.PreAuthentication.Content.Add(BASE_DIR + fileDir + "/", true);
 
             Log.Network.LogInformation("Starting webserver on {H}:{P}", serverSsl.Settings.Hostname, serverSsl.Settings.Port);
             serverSsl.Start();
