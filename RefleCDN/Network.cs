@@ -20,6 +20,8 @@ static class Network {
         server = new WebserverLite(new WebserverSettings("0.0.0.0", port), Routes.DefaultNotFoundRoute);
         server.Events.Logger += Logger;
         server.Settings.Debug.Responses = true;
+        server.Settings.Debug.Requests = true;
+        server.Settings.Debug.Routing = true;
 
         server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, BASE_DIR, Routes.ShowServer, Routes.DefaultErrorRoute);
         server.Routes.PreAuthentication.Content.Add(BASE_DIR + fileDir + "/", true);
