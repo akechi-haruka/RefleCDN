@@ -11,20 +11,22 @@ static class Network {
     private static WebserverLite server;
     private static WebserverLite serverSsl;
 
+    internal static String FileDir;
+    
     public static void Initialize() {
         Log.Network.LogDebug("Initializing network...");
 
         int port = Configuration.GetInt("Settings", "Port");
-        string fileDir = Configuration.Get("Settings", "FilesDirectory");
+        FileDir = Configuration.Get("Settings", "FilesDirectory");
 
-        server = new WebserverLite(new WebserverSettings("0.0.0.0", port), Routes.DefaultNotFoundRoute);
+        server = new WebserverLite(new WebserverSettings("0.0.0.0", port), Routes.HandleFileAccess);
         server.Events.Logger += Logger;
         server.Settings.Debug.Responses = true;
         server.Settings.Debug.Requests = true;
         server.Settings.Debug.Routing = true;
 
         server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, BASE_DIR, Routes.ShowServer, Routes.DefaultErrorRoute);
-        server.Routes.PreAuthentication.Content.Add(BASE_DIR + fileDir + "/", true);
+        server.Routes.Exception = Routes.DefaultErrorRoute;
 
         Log.Network.LogInformation("Starting webserver on {H}:{P}", server.Settings.Hostname, server.Settings.Port);
         server.Start();
@@ -38,13 +40,15 @@ static class Network {
                     PfxCertificateFile = Configuration.Get("Settings", "SSLFileName"),
                     PfxCertificatePassword = Configuration.Get("Settings", "SSLPassword")
                 }
-            }, Routes.DefaultNotFoundRoute);
+            }, Routes.HandleFileAccess);
 
             serverSsl.Events.Logger += Logger;
-            serverSsl.Settings.Debug.Responses = true;
+            server.Settings.Debug.Responses = true;
+            server.Settings.Debug.Requests = true;
+            server.Settings.Debug.Routing = true;
 
             serverSsl.Routes.PreAuthentication.Static.Add(HttpMethod.GET, BASE_DIR, Routes.ShowServer, Routes.DefaultErrorRoute);
-            serverSsl.Routes.PreAuthentication.Content.Add(BASE_DIR + fileDir + "/", true);
+            serverSsl.Routes.Exception = Routes.DefaultErrorRoute;
 
             Log.Network.LogInformation("Starting webserver on {H}:{P}", serverSsl.Settings.Hostname, serverSsl.Settings.Port);
             serverSsl.Start();
@@ -80,5 +84,38 @@ static class Routes {
     internal static async Task ShowServer(HttpContextBase ctx) {
         ctx.Response.StatusCode = 200;
         await ctx.Response.Send("RefleCDN");
+    }
+    
+    internal static async Task HandleFileAccess(HttpContextBase ctx) {
+        Stream file = null;
+        try {
+            string path = ctx.Request.Url.RawWithoutQuery;
+            Log.Main.LogInformation("Path access: " + path);
+
+            if (!path.StartsWith("/" + Network.FileDir)) {
+                Log.Main.LogWarning("Path does not start with the configured directory: " + path);
+                await DefaultNotFoundRoute(ctx);
+                return;
+            }
+
+            string localFile = path.Substring(1);
+
+            if (!File.Exists(localFile)) {
+                Log.Main.LogWarning("File does not exist: " + path);
+                await DefaultNotFoundRoute(ctx);
+                return;
+            }
+
+            long length = new FileInfo(localFile).Length;
+            file = File.OpenRead(localFile);
+
+            Log.Network.LogDebug("Sending " + length + " bytes");
+            await ctx.Response.Send(length, file);
+            Log.Network.LogDebug("OK");
+        } catch (Exception ex) {
+            await DefaultErrorRoute(ctx, ex);
+        } finally {
+            file?.Close();
+        }
     }
 }
